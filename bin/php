@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+cd "$(dirname "$0")/.."
+
+ARCH=$(uname -m)
+PHP_CLI="$(pwd)/bin/php-8.2.13-cli-macos-${ARCH}"
+
+if [[ ! -f "$PHP_CLI" ]]
+then
+	echo "Could not find a PHP static CLI for the ${ARCH} architecture."
+	exit 1
+fi
+
+$PHP_CLI "$@"
