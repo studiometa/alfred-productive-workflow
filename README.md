@@ -4,7 +4,7 @@ An [Alfred](https://alfred.app/) workflow to quickly interact with your [Product
 
 ## Installation
 
-Download the workflow from the [latest release](https://github.com/studiometa/alfred-productive-workflow) and install it. You will be prompted to configure 2 variables:
+Download the workflow from the [latest release](https://github.com/studiometa/alfred-productive-workflow/releases/) and install it. You will be prompted to configure 2 variables:
 
 - `PRODUCTIVE_ORG_ID`: the ID of your organization on Productive, you can find it in the URL when logging in `https://app.productive.io/<PRODUCTIVE_ORG_ID>-foo/...`
 - `PRODUCTIVE_AUTH_TOKEN`: a personal access token for the API, generate one in Settings → API integrations
