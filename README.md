@@ -20,6 +20,7 @@ You may need to allow the execution of the static PHP CLI shipped with the Workf
 The following commands are available:
 
 | Keyword | Action |
+|-|-|
 | `ppt` | Get all tasks |
 | `ppp` | Get all projects |
 | `ppd` | Get all deals |
