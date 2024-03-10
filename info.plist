@@ -420,49 +420,49 @@
 			<key>xpos</key>
 			<real>280</real>
 			<key>ypos</key>
-			<real>775</real>
+			<real>560</real>
 		</dict>
 		<key>6AA265BD-5CE2-4894-8CE8-6355FBC705B8</key>
 		<dict>
 			<key>xpos</key>
-			<real>285</real>
+			<real>280</real>
 			<key>ypos</key>
-			<real>645</real>
+			<real>430</real>
 		</dict>
 		<key>980CFA9E-4766-4FBC-B680-DA50874D2C6D</key>
 		<dict>
 			<key>xpos</key>
-			<real>285</real>
+			<real>280</real>
 			<key>ypos</key>
-			<real>515</real>
+			<real>300</real>
 		</dict>
 		<key>BA02CB6A-8986-4C6C-BE2F-896B6E5FCCB6</key>
 		<dict>
 			<key>xpos</key>
-			<real>285</real>
+			<real>280</real>
 			<key>ypos</key>
-			<real>375</real>
+			<real>170</real>
 		</dict>
 		<key>BD4401CE-795C-4224-BC64-88A9908D80B7</key>
 		<dict>
 			<key>xpos</key>
-			<real>495</real>
+			<real>280</real>
 			<key>ypos</key>
-			<real>780</real>
+			<real>685</real>
 		</dict>
 		<key>C1DDCDD1-CA8A-4AC7-9189-BB7AB9422309</key>
 		<dict>
 			<key>xpos</key>
 			<real>280</real>
 			<key>ypos</key>
-			<real>230</real>
+			<real>40</real>
 		</dict>
 		<key>DEF46EA1-DE83-47A5-816D-CD010806932F</key>
 		<dict>
 			<key>xpos</key>
-			<real>555</real>
+			<real>565</real>
 			<key>ypos</key>
-			<real>515</real>
+			<real>365</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
