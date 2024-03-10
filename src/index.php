@@ -17,7 +17,6 @@ use Alfred\Productive\Resources\Services;
 use Brandlabs\Productiveio\Resources\People;
 use Brandlabs\Productiveio\Resources\TimeEntries;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 define('ROOT_DIR', dirname(__DIR__));
@@ -83,11 +82,13 @@ function logger(?string $msg = ''): void
     echo $msg ?? '' . PHP_EOL;
 }
 
-function get_cache(int $ttl = -1): AdapterInterface
+function get_cache(int $ttl = -1): ArrayAdapter|FilesystemAdapter
 {
-    // return new ArrayAdapter(
-    //     defaultLifetime: $ttl,
-    // );
+    if (env('APP_CACHE') === 'false') {
+        return new ArrayAdapter(
+            defaultLifetime: $ttl,
+        );
+    }
 
     return new FilesystemAdapter(
         namespace: 'productive',
@@ -218,7 +219,9 @@ function format_minutes(?int $minutes): string
 
 function format_name(array $person):string
 {
+    /** @var null|string */
     $first_name = $person['attributes']['first_name'];
+    /** @var null|string */
     $last_name = $person['attributes']['last_name'];
     $last_name_initial = strtoupper(substr($last_name, 0, 1));
 
@@ -226,13 +229,15 @@ function format_name(array $person):string
         return "{$first_name} {$last_name_initial}.";
     }
 
-    if (!$first_name && $last_name) {
+    if (is_null($first_name) && $last_name) {
         return $last_name;
     }
 
-    if ($first_name && !$last_name) {
+    if ($first_name && is_null($last_name)) {
         return $first_name;
     }
+
+    return "";
 }
 
 function format_subtitle(array $items):string
@@ -434,8 +439,6 @@ function cmd(string $cmd, string $resource_class, array $parameters = [], ?bool 
 
     $cache = get_cache();
     $cache_key = $cmd;
-
-    // $cache->delete($cache_key);
 
     if (!$clear_cache) {
         update_in_background($cmd);
