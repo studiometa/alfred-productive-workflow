@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alfred\Productive;
 
 use Exception;
@@ -9,7 +11,14 @@ use Brandlabs\Productiveio\ApiClient as Client;
 use Brandlabs\Productiveio\BaseResource;
 use Brandlabs\Productiveio\Resources\Projects;
 use Brandlabs\Productiveio\Resources\Tasks;
+use Brandlabs\Productiveio\Resources\Companies;
+use Alfred\Productive\Resources\Deals;
+use Alfred\Productive\Resources\Services;
+use Brandlabs\Productiveio\Resources\People;
+use Brandlabs\Productiveio\Resources\TimeEntries;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 define('ROOT_DIR', dirname(__DIR__));
 
@@ -49,6 +58,11 @@ function get_org_id(): string
     return env('PRODUCTIVE_ORG_ID');
 }
 
+function get_person_id(): string
+{
+    return env('PRODUCTIVE_PERSON_ID');
+}
+
 function get_auth_token(): string
 {
     return env('PRODUCTIVE_AUTH_TOKEN');
@@ -69,8 +83,12 @@ function logger(?string $msg = ''): void
     echo $msg ?? '' . PHP_EOL;
 }
 
-function get_cache(int $ttl = 0): FilesystemAdapter
+function get_cache(int $ttl = -1): AdapterInterface
 {
+    // return new ArrayAdapter(
+    //     defaultLifetime: $ttl,
+    // );
+
     return new FilesystemAdapter(
         namespace: 'productive',
         defaultLifetime: $ttl,
@@ -130,6 +148,24 @@ function validate_resource_class(string $resource_class): void
     }
 }
 
+function create_time_entry(
+    int $service_id,
+    int $task_id,
+    int $duration_in_minutes
+) {
+    $resource = new TimeEntries(get_client());
+    $resource->create([
+        'date' => date('Y-m-d'),
+        'service_id' => $service_id,
+        'task_id' => $task_id,
+        'person_id' => get_person_id(),
+        'time' => $duration_in_minutes,
+    ]);
+}
+
+/**
+ * @todo get paginated content in the background and update the cache
+ */
 function get_all_by_resource(string $resource_class, array $parameters = []):array
 {
     validate_resource_class($resource_class);
@@ -186,7 +222,33 @@ function format_name(array $person):string
     $last_name = $person['attributes']['last_name'];
     $last_name_initial = strtoupper(substr($last_name, 0, 1));
 
-    return "{$first_name} {$last_name_initial}.";
+    if ($first_name && $last_name) {
+        return "{$first_name} {$last_name_initial}.";
+    }
+
+    if (!$first_name && $last_name) {
+        return $last_name;
+    }
+
+    if ($first_name && !$last_name) {
+        return $first_name;
+    }
+}
+
+function format_subtitle(array $items):string
+{
+    return implode(
+        ' → ',
+        array_filter(
+            $items,
+            fn ($value) => !is_null($value),
+        )
+    );
+}
+
+function format_match(array $item): string
+{
+    return implode(' ', [$item['title'], $item['subtitle']]);
 }
 
 function tasks_formatter(array $task): array
@@ -196,30 +258,42 @@ function tasks_formatter(array $task): array
     $assignee = $task['relationships']['assignee'];
     $status = $task['relationships']['workflow_status'];
 
+    $task_key = sprintf(
+        '%s-%s-%s',
+        $company['attributes']['company_code'],
+        $project['attributes']['project_number'],
+        $task['attributes']['task_number']
+    );
+
     $item = [
         'title'    => $task['attributes']['title'],
         'uid'      => $task['id'],
         'arg'      => sprintf('https://app.productive.io/%s/task/%s', get_org_id(), $task['id']),
-        'subtitle' => implode(
-            ' → ',
-            array_filter(
-                [
-                    $company['attributes']['name'],
-                    $project['attributes']['name'],
-                    $status['attributes']['name'],
-                    isset($assignee['attributes']) ? format_name($assignee) : null,
-                    sprintf(
-                        '%s / %s',
-                        format_minutes($task['attributes']['worked_time']),
-                        format_minutes($task['attributes']['initial_estimate'])
-                    ),
-                ],
-                fn ($value) => !is_null($value),
-            )
-        ),
+        'subtitle' => format_subtitle([
+            $task_key,
+            $company['attributes']['name'],
+            $project['attributes']['name'],
+            $status['attributes']['name'],
+            isset($assignee['attributes']) ? format_name($assignee) : null,
+            sprintf(
+                '%s / %s',
+                format_minutes($task['attributes']['worked_time']),
+                format_minutes($task['attributes']['initial_estimate'])
+            ),
+        ]),
+        'variables' => [
+            'task_id'       => $task['id'],
+            'task_key'      => $task_key,
+            'project_id'    => $project['id'],
+            'company_id'    => $company['id'],
+            'assignee_id'   => $assignee ? $assignee['id'] ?? null : null,
+            'status_id'     => $status['id'],
+            'relationships' => $task['relationships'],
+            'attributes'    => $task['attributes'],
+        ],
     ];
 
-    $item['match'] = implode(' ', [$item['title'], $item['subtitle']]);
+    $item['match'] = format_match($item);
 
     return $item;
 }
@@ -228,11 +302,119 @@ function projects_formatter(array $project): array
 {
     $company = $project['relationships']['company'];
 
-    return [
-        'title' => $project['attributes']['name'] . ' — ' . $company['attributes']['name'],
+    $item = [
+        'title' => $project['attributes']['name'],
+        'subtitle' => format_subtitle([
+            $company['attributes']['company_code'],
+            $company['attributes']['name'],
+        ]),
         'arg'   => sprintf('https://app.productive.io/%s/projects/%s', get_org_id(), $project['id']),
         'uid'   => $project['id'],
+        'variables' => [
+            'relationships' => $project['relationships'],
+            'attributes' => $project['attributes'],
+        ],
     ];
+
+    $item['match'] = format_match($item);
+
+    return $item;
+}
+
+function deals_formatter(array $deal):array
+{
+    $company = $deal['relationships']['company'];
+    $responsible = $deal['relationships']['responsible'];
+    $deal_status = $deal['relationships']['deal_status'];
+
+    $status = [
+        1 => 'Ouvert',
+        2 => 'Gagné',
+        3 => 'Perdu',
+    ];
+
+    $item = [
+        'title'     => $deal['attributes']['name'],
+        'subtitle'  => format_subtitle([
+            $company['attributes']['company_code'],
+            $company['attributes']['name'],
+            isset($responsible['attributes']) ? format_name($responsible) : null,
+            $status[$deal['attributes']['sales_status_id'] ?? 3],
+            isset($deal_status['attributes']) ? $deal_status['attributes']['name'] : null,
+        ]),
+        'arg'       => sprintf('https://app.productive.io/%s/deals/%s', get_org_id(), $deal['id']),
+        'uid'       => $deal['id'],
+        'variables' => [
+            'relationships' => $deal['relationships'],
+            'attributes' => $deal['attributes'],
+        ],
+    ];
+
+    $item['match'] = format_match($item);
+
+    return $item;
+}
+
+function companies_formatter(array $company):array
+{
+    $item = [
+        'title'     => $company['attributes']['name'],
+        'subtitle'  => format_subtitle([
+            $company['attributes']['company_code'],
+            $company['attributes']['name'],
+        ]),
+        'arg'       => sprintf('https://app.productive.io/%s/companies/%s', get_org_id(), $company['id']),
+        'uid'       => $company['id'],
+        'variables' => [
+            'relationships' => $company['relationships'],
+            'attributes' => $company['attributes'],
+        ],
+    ];
+
+    $item['match'] = format_match($item);
+
+    return $item;
+}
+
+function services_formatter(array $service):array
+{
+    return [
+        'title'     => $service['attributes']['name'],
+        'arg'       => sprintf('https://app.productive.io/%s/companies/%s', get_org_id(), $service['id']),
+        'uid'       => $service['id'],
+        'variables' => [
+            'relationships' => $service['relationships'],
+            'attributes' => $service['attributes'],
+        ],
+    ];
+}
+
+function people_formatter(array $person):array
+{
+    $company = $person['relationships']['company'];
+
+    $item = [
+        'title'     => trim(sprintf(
+            '%s %s',
+            $person['attributes']['first_name'],
+            $person['attributes']['last_name']
+        )),
+        'subtitle'  => format_subtitle([
+            isset($company['attributes']) ? $company['attributes']['name'] : null,
+            $person['attributes']['title'],
+            $person['attributes']['email'],
+        ]),
+        'arg'       => sprintf('https://app.productive.io/%s/people/%s', get_org_id(), $person['id']),
+        'uid'       => $person['id'],
+        'variables' => [
+            'relationships' => $person['relationships'],
+            'attributes' => $person['attributes'],
+        ],
+    ];
+
+    $item['match'] = format_match($item);
+
+    return $item;
 }
 
 function validate_formatter(string $cmd):callable
@@ -252,6 +434,8 @@ function cmd(string $cmd, string $resource_class, array $parameters = [], ?bool 
 
     $cache = get_cache();
     $cache_key = $cmd;
+
+    // $cache->delete($cache_key);
 
     if (!$clear_cache) {
         update_in_background($cmd);
@@ -294,14 +478,23 @@ function main(array $args):void
     $command = $args[1] ?? 'tasks';
     $clear_cache = in_array('--clear-cache', $args);
 
-    switch ($command) {
-        case 'projects':
-            cmd($command, Projects::class, [], $clear_cache);
-            break;
-        case 'tasks':
-            cmd($command, Tasks::class, ['sort' => '-updated_at'], $clear_cache);
-            break;
-    }
+    $resources_map = [
+        'companies' => [Companies::class, ['filter[status]' => 1]],
+        'deals'     => [Deals::class, [
+            'filter[sales_status_id]' => '1,2,3',
+        ]],
+        'people'    => [People::class, ['filter[status]' => 1]],
+        'projects'  => [Projects::class, []],
+        'services'  => [Services::class, []],
+        'tasks'     => [Tasks::class, ['sort' => '-updated_at']],
+    ];
+
+    cmd(
+        $command,
+        $resources_map[$command][0],
+        $resources_map[$command][1],
+        $clear_cache
+    );
 }
 
 main($argv);
