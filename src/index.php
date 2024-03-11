@@ -370,6 +370,8 @@ function projects_formatter(array $project): array
         'arg'   => sprintf('https://app.productive.io/%s/projects/%s', get_org_id(), $project['id']),
         'uid'   => $project['id'],
         'variables' => [
+            'project_id' => $project['id'],
+            'company_id' => $company['id'],
             'relationships' => $project['relationships'],
             'attributes' => $project['attributes'],
         ],
@@ -401,11 +403,13 @@ function deals_formatter(array $deal):array
             $status[$deal['attributes']['sales_status_id'] ?? 3],
             isset($deal_status['attributes']) ? $deal_status['attributes']['name'] : null,
         ]),
-        'arg'       => sprintf('https://app.productive.io/%s/deals/%s', get_org_id(), $deal['id']),
+        'arg'       => sprintf('https://app.productive.io/%s/d/deal/%s', get_org_id(), $deal['id']),
         'uid'       => $deal['id'],
         'variables' => [
+            'deal_id'       => $deal['id'],
+            'company_id'    => $company['id'],
             'relationships' => $deal['relationships'],
-            'attributes' => $deal['attributes'],
+            'attributes'    => $deal['attributes'],
         ],
     ];
 
@@ -457,7 +461,7 @@ function services_formatter(array $service):array
                 format_cents($service['attributes']['budget_total'])
             ),
         ]),
-        'arg'       => sprintf('https://app.productive.io/%s/companies/%s', get_org_id(), $service['id']),
+        'arg'       => sprintf('https://app.productive.io/%s/d/deal/%s/services', get_org_id(), $deal['id']),
         'uid'       => $service['id'],
         'variables' => [
             'relationships' => $service['relationships'],
