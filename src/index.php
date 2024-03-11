@@ -207,14 +207,23 @@ function format_minutes(?int $minutes): string
     $is_round_hour = $min === '00';
 
     if ($is_round_hour) {
-        return "{$hours}h";
+        return "{$hours} h";
     }
 
     if ($is_less_than_one_hour) {
-        return "{$min}min";
+        return "{$min} min";
     }
 
-    return "{$hours}h{$min}min";
+    return "{$hours} h {$min} min";
+}
+
+function format_cents(?int $cents): string
+{
+    if (is_null($cents)) {
+        return '...';
+    }
+
+    return sprintf('%s €', $cents / 100);
 }
 
 function format_name(array $person):string
@@ -383,8 +392,26 @@ function companies_formatter(array $company):array
 
 function services_formatter(array $service):array
 {
-    return [
+    $deal = $service['relationships']['deal'];
+    $company = $deal['relationships']['company'];
+
+    $item = [
         'title'     => $service['attributes']['name'],
+        'subtitle'  => format_subtitle([
+            $company['attributes']['company_code'],
+            $company['attributes']['name'],
+            $deal['attributes']['name'],
+            sprintf(
+                '%s / %s',
+                format_minutes($service['attributes']['worked_time']),
+                format_minutes($service['attributes']['budgeted_time'])
+            ),
+            sprintf(
+                '%s / %s',
+                format_cents($service['attributes']['budget_used']),
+                format_cents($service['attributes']['budget_total'])
+            ),
+        ]),
         'arg'       => sprintf('https://app.productive.io/%s/companies/%s', get_org_id(), $service['id']),
         'uid'       => $service['id'],
         'variables' => [
@@ -392,6 +419,10 @@ function services_formatter(array $service):array
             'attributes' => $service['attributes'],
         ],
     ];
+
+    $item['match'] = format_match($item);
+
+    return $item;
 }
 
 function people_formatter(array $person):array
