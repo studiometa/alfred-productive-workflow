@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.0.3 - 2024.03.11
+
+### Changed
+
+- Improve logging ([8a0f561](https://github.com/studiometa/alfred-productive-workflow/commit/8a0f561))
+
+### Fixed
+
+- Fix deals and services URLs ([dacd342](https://github.com/studiometa/alfred-productive-workflow/commit/dacd342))
+
 ## v0.0.2 - 2024.03.11
 
 ### Changed
