@@ -26,12 +26,14 @@ require ROOT_DIR . '/vendor/autoload.php';
 
 ini_set('memory_limit', '1024M');
 
-function get_cli_args():array {
+function get_cli_args():array
+{
     global $argv;
     return $argv;
 }
 
-function should_update_cache(): bool {
+function should_update_cache(): bool
+{
     return in_array('--update-cache', get_cli_args());
 }
 
