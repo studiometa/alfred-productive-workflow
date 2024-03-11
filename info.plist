@@ -123,7 +123,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive tasks...</string>
 				<key>script</key>
-				<string>./bin/php src/index.php tasks</string>
+				<string>./src/main.sh tasks</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -172,7 +172,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive projects...</string>
 				<key>script</key>
-				<string>./bin/php src/index.php projects</string>
+				<string>./src/main.sh projects</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -221,7 +221,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive deals...</string>
 				<key>script</key>
-				<string>./bin/php src/index.php deals</string>
+				<string>./src/main.sh deals</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -291,7 +291,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive companies...</string>
 				<key>script</key>
-				<string>./bin/php src/index.php companies</string>
+				<string>./src/main.sh companies</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -340,7 +340,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive people...</string>
 				<key>script</key>
-				<string>./bin/php src/index.php people</string>
+				<string>./src/main.sh people</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -389,7 +389,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive services...</string>
 				<key>script</key>
-				<string>./bin/php src/index.php services</string>
+				<string>./src/main.sh services</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>

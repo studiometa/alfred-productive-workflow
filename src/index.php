@@ -18,12 +18,22 @@ use Brandlabs\Productiveio\Resources\People;
 use Brandlabs\Productiveio\Resources\TimeEntries;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\CacheItem;
 
 define('ROOT_DIR', dirname(__DIR__));
 
 require ROOT_DIR . '/vendor/autoload.php';
 
 ini_set('memory_limit', '1024M');
+
+function get_cli_args():array {
+    global $argv;
+    return $argv;
+}
+
+function should_update_cache(): bool {
+    return in_array('--update-cache', get_cli_args());
+}
 
 function env(string $key, ?string $default = null):string
 {
@@ -35,21 +45,7 @@ function env(string $key, ?string $default = null):string
 
 function get_cache_dir(): string
 {
-    if (env('alfred_workflow_cache')) {
-        return env('alfred_workflow_cache');
-    }
-
-    $cache_dir = ROOT_DIR . '/cache';
-    if (!file_exists($cache_dir)) {
-        mkdir($cache_dir);
-    }
-
-    return $cache_dir;
-}
-
-function get_tmp_dir(): string
-{
-    return sys_get_temp_dir();
+    return ROOT_DIR . '/cache';
 }
 
 function get_org_id(): string
@@ -77,22 +73,20 @@ function get_client(): Client
     return $client;
 }
 
-function logger(?string $msg = ''): void
+function logger(...$msg): void
 {
-    echo $msg ?? '' . PHP_EOL;
-}
-
-function get_cache(int $ttl = -1): ArrayAdapter|FilesystemAdapter
-{
-    if (env('APP_CACHE') === 'false') {
-        return new ArrayAdapter(
-            defaultLifetime: $ttl,
-        );
+    // Do not log anything when outputting data for Alfred
+    if (env('alfred_workflow_uid') && !should_update_cache()) {
+        return;
     }
 
+    echo trim(implode(' ', $msg)) . PHP_EOL;
+}
+
+function get_cache(): FilesystemAdapter
+{
     return new FilesystemAdapter(
         namespace: 'productive',
-        defaultLifetime: $ttl,
         directory: get_cache_dir(),
     );
 }
@@ -115,8 +109,8 @@ function merge_relationships(array $data, array $included): array
 
             $resolved_relationship = $included_collection->where('type', $type)->where('id', $id)->first();
 
-            // Resolve companies relationships for projects
-            if ($type === 'projects' && isset($resolved_relationship['relationships']['company'])) {
+            // Resolve companies relationships for projects and deals
+            if (in_array($type, ['projects','deals']) && isset($resolved_relationship['relationships']['company'])) {
                 $company = $included_collection
                     ->where('type', 'companies')
                     ->where('id', $resolved_relationship['relationships']['company']['data']['id'])
@@ -164,31 +158,80 @@ function create_time_entry(
     ]);
 }
 
-/**
- * @todo get paginated content in the background and update the cache
- */
-function get_all_by_resource(string $resource_class, array $parameters = []):array
+function generate_cache_key(string $resource_class, array $parameters = [])
 {
+    return md5($resource_class . json_encode($parameters));
+}
+
+function fetch_all_by_resource(string $resource_class, callable $resource_formatter, array $parameters = [])
+{
+    logger('fetch_all_by_resource', $resource_class);
+
+    $cache = get_cache();
+    $last_update_item = $cache->getItem(md5('last_update_' . $resource_class));
+    if ($last_update_item->isHit()) {
+        logger('last fetch happened less than 1 minute ago, not fetching.');
+        return;
+    } else {
+        $last_update_item->expiresAfter(60);
+        $cache->save($last_update_item);
+    }
+
     validate_resource_class($resource_class);
 
     $client = get_client();
-    /** @var Tasks|Projects */
+    /** @var Projects|Tasks|Companies|Deals|Services|People|TimeEntries */
     $resource = new $resource_class($client);
 
+    $cache_key = generate_cache_key($resource_class, $parameters);
+    $cache_item = $cache->getItem($cache_key);
+
+    logger('fetch_all_by_resource', $cache_key);
+
     $current_page = 1;
-    $page_size = 100;
-    $response = $resource->getList(['page[size]' => $page_size, 'page[number]' => $current_page] + $parameters);
+    $page_size = 200;
+    $parameters = ['page[size]' => $page_size, 'page[number]' => $current_page] + $parameters;
+
+    $response = $resource->getList($parameters);
     $data = $response['data'];
     $included = $response['included'];
 
+    $items = array_map($resource_formatter, merge_relationships($data, $included));
+    $cache_item->set($items);
+    $cache->save($cache_item);
+
     while ($current_page < $response['meta']['total_pages']) {
         $current_page += 1;
-        $response = $resource->getList(['page[size]' => (string)$page_size, 'page[number]' => (string)$current_page]);
+        logger('fetch_all_by_resource', $current_page, $page_size, count($cache_item->get()));
+        $response = $resource->getList([
+            'page[size]' => $page_size,
+            'page[number]' => $current_page
+        ]);
+
         $data = array_merge($data, $response['data']);
         $included = array_merge($included, $response['included']);
+        $items = array_map($resource_formatter, merge_relationships($data, $included));
+        $cache_item->set($items);
+        $cache->save($cache_item);
+    }
+}
+
+function get_all_by_resource_from_cache(string $resource_class, array $parameters = []):array
+{
+    $cache = get_cache();
+    $cache_key = generate_cache_key($resource_class, $parameters);
+    $cache_item = $cache->getItem($cache_key);
+
+    logger('get_all_by_resource_from_cache', $cache_key, $cache_item->isHit() ? 'hit' : 'miss');
+
+    while (!$cache_item->isHit()) {
+        sleep(1);
+        $cache_item = $cache->getItem($cache_key);
+        logger('nothing to display');
     }
 
-    return merge_relationships($data, $included);
+    $items = $cache_item->get();
+    return $items;
 }
 
 function format_minutes(?int $minutes): string
@@ -464,43 +507,17 @@ function validate_formatter(string $cmd):callable
     return fn (...$args) => $formatter(...$args);
 }
 
-function cmd(string $cmd, string $resource_class, array $parameters = [], ?bool $clear_cache = false):void
+function cmd(string $cmd, string $resource_class, array $parameters = []):void
 {
     validate_resource_class($resource_class);
-
-    $cache = get_cache();
-    $cache_key = $cmd;
-
-    if (!$clear_cache) {
-        update_in_background($cmd);
-    }
-
     $resource_formatter = validate_formatter($cmd);
-    $items = $cache->get($cache_key, function () use ($resource_formatter, $parameters, $resource_class) {
-        $resources = get_all_by_resource($resource_class, $parameters);
-        $items = [];
 
-        foreach ($resources as $resource) {
-            $items[] = $resource_formatter($resource);
-        }
-
-        return ['rerun' => 5, 'items' => $items];
-    });
-
-    echo json_encode($items);
-}
-
-/**
- * Execute a command in a background process and without cache.
- */
-function update_in_background(string $cmd):void
-{
-    $php_exec = env('_');
-    $script = ROOT_DIR . '/src/index.php';
-    $logs = get_tmp_dir() . '/alfred-productive-workflow-background-update.log';
-    $pid = get_tmp_dir() . '/alfred-productive-workflow-background-pid.txt';
-
-    exec(sprintf("%s > %s 2>&1 & echo $! >> %s", "{$php_exec} {$script} {$cmd} --clear-cache", $logs, $pid));
+    if (should_update_cache()) {
+        fetch_all_by_resource($resource_class, $resource_formatter, $parameters);
+    } else {
+        $items = get_all_by_resource_from_cache($resource_class, $parameters);
+        die(json_encode(['items' => $items], JSON_PRETTY_PRINT));
+    }
 }
 
 /**
@@ -510,7 +527,6 @@ function update_in_background(string $cmd):void
 function main(array $args):void
 {
     $command = $args[1] ?? 'tasks';
-    $clear_cache = in_array('--clear-cache', $args);
 
     $resources_map = [
         'companies' => [Companies::class, ['filter[status]' => 1]],
@@ -523,11 +539,12 @@ function main(array $args):void
         'tasks'     => [Tasks::class, ['sort' => '-updated_at']],
     ];
 
+    logger('main', should_update_cache());
+
     cmd(
         $command,
         $resources_map[$command][0],
-        $resources_map[$command][1],
-        $clear_cache
+        $resources_map[$command][1]
     );
 }
 
