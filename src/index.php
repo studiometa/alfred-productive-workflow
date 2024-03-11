@@ -22,6 +22,12 @@ use Symfony\Component\Cache\CacheItem;
 
 define('ROOT_DIR', dirname(__DIR__));
 
+error_reporting(E_ALL);
+ini_set('ignore_repeated_errors', true);
+ini_set('display_errors', false);
+ini_set('log_errors', true);
+ini_set('error_log', ROOT_DIR . '/logs/error.log');
+
 require ROOT_DIR . '/vendor/autoload.php';
 
 ini_set('memory_limit', '1024M');
@@ -43,6 +49,11 @@ function env(string $key, ?string $default = null):string
     /** @var array<string, string> */
     $server = $_SERVER;
     return (string)($server[$key] ?? $default);
+}
+
+function get_update_interval(): int
+{
+    return (int)(env('UPDATE_INTERVAL') ?: 60);
 }
 
 function get_cache_dir(): string
@@ -77,12 +88,18 @@ function get_client(): Client
 
 function logger(...$msg): void
 {
-    // Do not log anything when outputting data for Alfred
-    if (env('alfred_workflow_uid') && !should_update_cache()) {
-        return;
-    }
+    $log_path = ROOT_DIR . '/logs/run.log';
 
-    echo trim(implode(' ', $msg)) . PHP_EOL;
+    file_put_contents(
+        $log_path,
+        sprintf(
+            '[%s] %s%s',
+            date('Y-m-d H:i:s e'),
+            trim(implode(' ', $msg)),
+            PHP_EOL
+        ),
+        FILE_APPEND | LOCK_EX
+    );
 }
 
 function get_cache(): FilesystemAdapter
@@ -165,17 +182,24 @@ function generate_cache_key(string $resource_class, array $parameters = [])
     return md5($resource_class . json_encode($parameters));
 }
 
+function get_resource_name(string $resource_class)
+{
+    return basename(str_replace('\\', '/', $resource_class));
+}
+
 function fetch_all_by_resource(string $resource_class, callable $resource_formatter, array $parameters = [])
 {
-    logger('fetch_all_by_resource', $resource_class);
+    $resource_name = get_resource_name($resource_class);
+    $logger = fn (...$args) => logger("[{$resource_name}]", ...$args);
+    $logger('fetch_all_by_resource', $resource_formatter, json_encode($parameters));
 
     $cache = get_cache();
     $last_update_item = $cache->getItem(md5('last_update_' . $resource_class));
     if ($last_update_item->isHit()) {
-        logger('last fetch happened less than 1 minute ago, not fetching.');
+        $logger('last fetch happened less than 1 minute ago, not fetching.');
         return;
     } else {
-        $last_update_item->expiresAfter(60);
+        $last_update_item->expiresAfter(get_update_interval());
         $cache->save($last_update_item);
     }
 
@@ -188,7 +212,7 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     $cache_key = generate_cache_key($resource_class, $parameters);
     $cache_item = $cache->getItem($cache_key);
 
-    logger('fetch_all_by_resource', $cache_key);
+    $logger('fetch_all_by_resource', $cache_key);
 
     $current_page = 1;
     $page_size = 200;
@@ -198,13 +222,21 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     $data = $response['data'];
     $included = $response['included'];
 
-    $items = array_map($resource_formatter, merge_relationships($data, $included));
+    $items = array_values(
+        collect(
+            array_map(
+                $resource_formatter,
+                merge_relationships($data, $included)
+            )
+        )->unique('uid')->all()
+    );
+
     $cache_item->set($items);
     $cache->save($cache_item);
 
     while ($current_page < $response['meta']['total_pages']) {
         $current_page += 1;
-        logger('fetch_all_by_resource', $current_page, $page_size, count($cache_item->get()));
+        $logger('fetch_all_by_resource', $current_page, $page_size, count($cache_item->get()));
         $response = $resource->getList([
             'page[size]' => $page_size,
             'page[number]' => $current_page
@@ -212,7 +244,14 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
         $data = array_merge($data, $response['data']);
         $included = array_merge($included, $response['included']);
-        $items = array_map($resource_formatter, merge_relationships($data, $included));
+        $items = array_values(
+            collect(
+                array_map(
+                    $resource_formatter,
+                    merge_relationships($data, $included)
+                )
+            )->unique('uid')->all()
+        );
         $cache_item->set($items);
         $cache->save($cache_item);
     }
@@ -220,16 +259,21 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
 function get_all_by_resource_from_cache(string $resource_class, array $parameters = []):array
 {
+    $resource_name = get_resource_name($resource_class);
+    $logger = fn (...$args) => logger("[{$resource_name}]", ...$args);
+    $logger('get_all_by_resource_from_cache', json_encode($parameters));
+
+
     $cache = get_cache();
     $cache_key = generate_cache_key($resource_class, $parameters);
     $cache_item = $cache->getItem($cache_key);
 
-    logger('get_all_by_resource_from_cache', $cache_key, $cache_item->isHit() ? 'hit' : 'miss');
+    $logger('get_all_by_resource_from_cache', $cache_key, $cache_item->isHit() ? 'hit' : 'miss');
 
     while (!$cache_item->isHit()) {
         sleep(1);
         $cache_item = $cache->getItem($cache_key);
-        logger('nothing to display');
+        $logger('get_all_by_resource_from_cache', 'nothing to display');
     }
 
     $items = $cache_item->get();
@@ -510,16 +554,15 @@ function validate_formatter(string $cmd):callable
         throw new Exception("The '{$formatter}' function does not exist.");
     }
 
-    return fn (...$args) => $formatter(...$args);
+    return $formatter;
 }
 
 function cmd(string $cmd, string $resource_class, array $parameters = []):void
 {
     validate_resource_class($resource_class);
-    $resource_formatter = validate_formatter($cmd);
 
     if (should_update_cache()) {
-        fetch_all_by_resource($resource_class, $resource_formatter, $parameters);
+        fetch_all_by_resource($resource_class, validate_formatter($cmd), $parameters);
     } else {
         $items = get_all_by_resource_from_cache($resource_class, $parameters);
         die(json_encode(['items' => $items], JSON_PRETTY_PRINT));
@@ -545,7 +588,7 @@ function main(array $args):void
         'tasks'     => [Tasks::class, ['sort' => '-updated_at']],
     ];
 
-    logger('main', should_update_cache());
+    logger('main', $command, should_update_cache() ? '--update-cache' : '');
 
     cmd(
         $command,
