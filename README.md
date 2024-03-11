@@ -2,6 +2,8 @@
 
 An [Alfred](https://alfred.app/) workflow to quickly interact with your [Productive.io](https://productive.io) organization.
 
+![Screenshot of the workflow running in Alfred](/assets/screenshot-tasks.png)
+
 ## Installation
 
 Download the workflow from the [latest release](https://github.com/studiometa/alfred-productive-workflow/releases/) and install it. You will be prompted to configure 2 variables:
