@@ -31,3 +31,8 @@ The following commands are available:
 ## Credits
 
 Thanks to [crazywhalecc/static-php-cli](https://github.com/crazywhalecc/static-php-cli) for the static PHP executables and to [brandlabs/productiveio](https://github.com/brandlabs/productiveio) for the [Productive.io](https://productive.io) SDK
+
+## To-do
+
+- [ ] Merge results for a given resource that have the same ID
+- [ ] Filter results from the script to be able to use the `rerun` feature and reload the list when it is updated
