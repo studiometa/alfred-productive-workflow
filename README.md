@@ -34,6 +34,6 @@ Thanks to [crazywhalecc/static-php-cli](https://github.com/crazywhalecc/static-p
 
 ## To-do
 
-- [ ] Merge results for a given resource that have the same ID
+- [x] Merge results for a given resource that have the same ID
 - [ ] Filter results from the script to be able to use the `rerun` feature and reload the list when it is updated
 - [ ] Clean log files periodically (daily ?)
