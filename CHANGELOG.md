@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.0.2 - 2024.03.11
+
+### Changed
+
+- Improve data fetching and cache management ([ef0c95e](https://github.com/studiometa/alfred-productive-workflow/commit/ef0c95e))
+- Improve the services command output ([d5282d3](https://github.com/studiometa/alfred-productive-workflow/commit/d5282d3))
+
+### Fixed
+
+- Fix script execution by using the correct PHP version ([a16b54f](https://github.com/studiometa/alfred-productive-workflow/commit/a16b54f))
+
 ## v0.0.1 - 2024.03.10
 
 ### Added
