@@ -6,6 +6,57 @@
 	<string>dev.studiometa.alfred-productive-workflow</string>
 	<key>connections</key>
 	<dict>
+		<key>0C9BFF89-D151-4F82-94CA-60728E8A9796</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>202E9480-6AB8-4B3E-98E6-1074456BF1BF</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>202E9480-6AB8-4B3E-98E6-1074456BF1BF</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>064DCA24-CDB9-4FD0-8914-EC06D22DE68E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>F662FB73-4693-4C2B-B1F6-AFB74D21C625</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>94A3760E-E617-4435-81DC-77340DA98E9B</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>5507F813-C177-403A-906C-95BBFED54D2A</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>0C9BFF89-D151-4F82-94CA-60728E8A9796</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>62835716-6D20-4763-BB8F-211BDBD21066</key>
 		<array>
 			<dict>
@@ -24,6 +75,32 @@
 			<dict>
 				<key>destinationuid</key>
 				<string>DEF46EA1-DE83-47A5-816D-CD010806932F</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>751FFC4E-9403-429A-976B-F8772682C4B0</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>94A3760E-E617-4435-81DC-77340DA98E9B</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>94A3760E-E617-4435-81DC-77340DA98E9B</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>01A997E0-8342-4824-90E6-770BCA15CAD1</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -75,11 +152,31 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>DEF46EA1-DE83-47A5-816D-CD010806932F</string>
+				<string>5507F813-C177-403A-906C-95BBFED54D2A</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>751FFC4E-9403-429A-976B-F8772682C4B0</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string>Select a service to start a timer</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>DEF46EA1-DE83-47A5-816D-CD010806932F</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>Open the task in Productive</string>
 				<key>vitoclose</key>
 				<false/>
 			</dict>
@@ -95,6 +192,56 @@
 	<string>Productive.io</string>
 	<key>objects</key>
 	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>{var:task_url}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>064DCA24-CDB9-4FD0-8914-EC06D22DE68E</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>fixedorder</key>
+				<false/>
+				<key>items</key>
+				<string>[{"title":"Overview","arg":"overview","subtitle":"Open the task in Productive"},{"title":"Start timer","subtitle":"Select a service to start a timer"}]</string>
+				<key>matchmode</key>
+				<integer>0</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string>Select an action</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.listfilter</string>
+			<key>uid</key>
+			<string>0C9BFF89-D151-4F82-94CA-60728E8A9796</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -123,7 +270,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive tasks...</string>
 				<key>script</key>
-				<string>./src/main.sh tasks</string>
+				<string>./src/main.sh tasks --query="{query}"</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -141,6 +288,136 @@
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
 			<string>C1DDCDD1-CA8A-4AC7-9189-BB7AB9422309</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>conditions</key>
+				<array>
+					<dict>
+						<key>inputstring</key>
+						<string></string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
+						<string>overview</string>
+						<key>outputlabel</key>
+						<string>Open URL</string>
+						<key>uid</key>
+						<string>F662FB73-4693-4C2B-B1F6-AFB74D21C625</string>
+					</dict>
+				</array>
+				<key>elselabel</key>
+				<string>else</string>
+				<key>hideelse</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.conditional</string>
+			<key>uid</key>
+			<string>202E9480-6AB8-4B3E-98E6-1074456BF1BF</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argument</key>
+				<string></string>
+				<key>passthroughargument</key>
+				<false/>
+				<key>variables</key>
+				<dict>
+					<key>task_url</key>
+					<string>{query}</string>
+				</dict>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.argument</string>
+			<key>uid</key>
+			<string>5507F813-C177-403A-906C-95BBFED54D2A</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Fetching services...</string>
+				<key>script</key>
+				<string>./src/main.sh services --company="$company_id"  --no-ended-deal</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Select a service for your timer</string>
+				<key>title</key>
+				<string>Select a service</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>94A3760E-E617-4435-81DC-77340DA98E9B</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alignment</key>
+				<integer>0</integer>
+				<key>backgroundcolor</key>
+				<string></string>
+				<key>fadespeed</key>
+				<integer>0</integer>
+				<key>fillmode</key>
+				<integer>0</integer>
+				<key>font</key>
+				<string></string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>largetypetext</key>
+				<string>{query}
+task_id: {var:task_id}
+service_id: {var:service_id}</string>
+				<key>textcolor</key>
+				<string></string>
+				<key>wrapat</key>
+				<integer>50</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.largetype</string>
+			<key>uid</key>
+			<string>01A997E0-8342-4824-90E6-770BCA15CAD1</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -192,6 +469,26 @@
 			<string>BA02CB6A-8986-4C6C-BE2F-896B6E5FCCB6</string>
 			<key>version</key>
 			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argument</key>
+				<string></string>
+				<key>passthroughargument</key>
+				<false/>
+				<key>variables</key>
+				<dict>
+					<key>task_url</key>
+					<string>{query}</string>
+				</dict>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.argument</string>
+			<key>uid</key>
+			<string>751FFC4E-9403-429A-976B-F8772682C4B0</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -415,6 +712,41 @@
 	<string>A performant Alfred workflow for Productive.io.</string>
 	<key>uidata</key>
 	<dict>
+		<key>01A997E0-8342-4824-90E6-770BCA15CAD1</key>
+		<dict>
+			<key>xpos</key>
+			<real>1050</real>
+			<key>ypos</key>
+			<real>150</real>
+		</dict>
+		<key>064DCA24-CDB9-4FD0-8914-EC06D22DE68E</key>
+		<dict>
+			<key>xpos</key>
+			<real>855</real>
+			<key>ypos</key>
+			<real>25</real>
+		</dict>
+		<key>0C9BFF89-D151-4F82-94CA-60728E8A9796</key>
+		<dict>
+			<key>xpos</key>
+			<real>525</real>
+			<key>ypos</key>
+			<real>40</real>
+		</dict>
+		<key>202E9480-6AB8-4B3E-98E6-1074456BF1BF</key>
+		<dict>
+			<key>xpos</key>
+			<real>695</real>
+			<key>ypos</key>
+			<real>60</real>
+		</dict>
+		<key>5507F813-C177-403A-906C-95BBFED54D2A</key>
+		<dict>
+			<key>xpos</key>
+			<real>440</real>
+			<key>ypos</key>
+			<real>70</real>
+		</dict>
 		<key>62835716-6D20-4763-BB8F-211BDBD21066</key>
 		<dict>
 			<key>xpos</key>
@@ -428,6 +760,20 @@
 			<real>280</real>
 			<key>ypos</key>
 			<real>430</real>
+		</dict>
+		<key>751FFC4E-9403-429A-976B-F8772682C4B0</key>
+		<dict>
+			<key>xpos</key>
+			<real>565</real>
+			<key>ypos</key>
+			<real>180</real>
+		</dict>
+		<key>94A3760E-E617-4435-81DC-77340DA98E9B</key>
+		<dict>
+			<key>xpos</key>
+			<real>855</real>
+			<key>ypos</key>
+			<real>150</real>
 		</dict>
 		<key>980CFA9E-4766-4FBC-B680-DA50874D2C6D</key>
 		<dict>

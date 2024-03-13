@@ -43,12 +43,41 @@ function should_update_cache(): bool
     return in_array('--update-cache', get_cli_args());
 }
 
+function cli_company_id():string
+{
+    $arg = collect(get_cli_args())->first(function($value) {
+        return str_starts_with($value, '--company=');
+    }) ?? '';
+
+    return str_replace('--company=', '', $arg);
+}
+
+function cli_no_ended_deal(): bool
+{
+    return in_array('--no-ended-deal', get_cli_args());
+}
+
 function env(string $key, ?string $default = null):string
 {
     (Dotenv::createImmutable(dirname(__DIR__)))->safeLoad();
     /** @var array<string, string> */
     $server = $_SERVER;
     return (string)($server[$key] ?? $default);
+}
+
+function array_get(array $arr, string $path) {
+    $parts = explode('.', $path);
+    $current = $arr;
+
+    foreach ($parts as $part) {
+        $current = $current[$part] ?? null;
+
+        if (is_null($current)) {
+            break;
+        }
+    }
+
+    return $current;
 }
 
 function get_update_interval(): int
@@ -232,7 +261,7 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     );
 
     $cache_item->set($items);
-    $cache->save($cache_item);
+    //$cache->save($cache_item);
 
     while ($current_page < $response['meta']['total_pages']) {
         $current_page += 1;
@@ -253,8 +282,9 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
             )->unique('uid')->all()
         );
         $cache_item->set($items);
-        $cache->save($cache_item);
     }
+
+    $cache->save($cache_item);
 }
 
 function get_all_by_resource_from_cache(string $resource_class, array $parameters = []):array
@@ -351,7 +381,11 @@ function format_subtitle(array $items):string
 
 function format_match(array $item): string
 {
-    return implode(' ', [$item['title'], $item['subtitle']]);
+    return str_replace(
+        ['(', ')', '/'],
+        [' ', ' ', ' '],
+        implode(' ', [$item['uid'], $item['title'], $item['subtitle']])
+    );
 }
 
 function tasks_formatter(array $task): array
@@ -385,6 +419,7 @@ function tasks_formatter(array $task): array
             ),
         ]),
         'variables' => [
+            'task_url'      => sprintf('https://app.productive.io/%s/task/%s', get_org_id(), $task['id']),
             'task_id'       => $task['id'],
             'task_key'      => $task_key,
             'project_id'    => $project['id'],
@@ -488,11 +523,14 @@ function services_formatter(array $service):array
     $deal = $service['relationships']['deal'];
     $company = $deal['relationships']['company'];
 
+    $deal_status = is_null(array_get($deal, 'attributes.closed_at')) ? 'Open' : 'Closed';
+
     $item = [
         'title'     => $service['attributes']['name'],
         'subtitle'  => format_subtitle([
             $company['attributes']['company_code'],
             $company['attributes']['name'],
+            $deal_status,
             $deal['attributes']['name'],
             sprintf(
                 '%s / %s',
@@ -508,8 +546,11 @@ function services_formatter(array $service):array
         'arg'       => sprintf('https://app.productive.io/%s/d/deal/%s/services', get_org_id(), $deal['id']),
         'uid'       => $service['id'],
         'variables' => [
+            'service_id'    => $service['id'],
+            'deal_id'       => $deal['id'],
+            'company_id'    => $company['id'],
             'relationships' => $service['relationships'],
-            'attributes' => $service['attributes'],
+            'attributes'    => $service['attributes'],
         ],
     ];
 
@@ -564,8 +605,25 @@ function cmd(string $cmd, string $resource_class, array $parameters = []):void
     if (should_update_cache()) {
         fetch_all_by_resource($resource_class, validate_formatter($cmd), $parameters);
     } else {
-        $items = get_all_by_resource_from_cache($resource_class, $parameters);
-        die(json_encode(['items' => $items], JSON_PRETTY_PRINT));
+        $items = collect(get_all_by_resource_from_cache($resource_class, $parameters));
+
+        if ($company_id = cli_company_id()) {
+            $items = $items->filter(function($value) use ($company_id) {
+                $relationships = $value['variables']['relationships'];
+                return
+                    array_get($relationships, 'company.id') === $company_id ||
+                    array_get($relationships, 'deal.relationships.company.id') === $company_id;
+            });
+        }
+
+        if (cli_no_ended_deal()) {
+            $items = $items->filter(function($value) {
+                $attributes = array_get($value, 'variables.relationships.deal.attributes');
+                return !is_null($attributes) && is_null(array_get($attributes, 'closed_at'));
+            });
+        }
+
+        die(json_encode(['items' => array_values($items->all())]));
     }
 }
 
