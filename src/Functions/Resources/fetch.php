@@ -97,7 +97,6 @@ function get_all_by_resource_from_cache(string $resource_class, array $parameter
     $logger = fn (...$args) => logger("[{$resource_name}]", ...$args);
     $logger('get_all_by_resource_from_cache', json_encode($parameters));
 
-
     $cache = get_cache();
     $cache_key = generate_cache_key($resource_class, $parameters);
     $cache_item = $cache->getItem($cache_key);
