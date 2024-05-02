@@ -1200,6 +1200,27 @@
 			<key>variable</key>
 			<string>PRODUCTIVE_AUTH_TOKEN</string>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string></string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Your account ID on Productive. Used to start timer from Alfred.  It can be found in the URL when you visit your profile: https://app.productive.io/ORG_ID-.../people/PERSON_ID/overview</string>
+			<key>label</key>
+			<string>Person ID</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>PRODUCTIVE_PERSON_ID</string>
+		</dict>
 	</array>
 	<key>version</key>
 	<string>0.0.0</string>

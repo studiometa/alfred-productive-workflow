@@ -8,8 +8,9 @@ An [Alfred](https://alfred.app/) workflow to quickly interact with your [Product
 
 Download the workflow from the [latest release](https://github.com/studiometa/alfred-productive-workflow/releases/) and install it. You will be prompted to configure 2 variables:
 
-- `PRODUCTIVE_ORG_ID`: the ID of your organization on Productive, you can find it in the URL when logging in `https://app.productive.io/<PRODUCTIVE_ORG_ID>-foo/...`
+- `PRODUCTIVE_ORG_ID`: the ID of your organization on Productive, you can find it in the URL when logging in `https://app.productive.io/<PRODUCTIVE_ORG_ID>-.../...`
 - `PRODUCTIVE_AUTH_TOKEN`: a personal access token for the API, generate one in Settings → API integrations
+- `PRODUCTIVE_PERSON_ID`: your account ID on Productive, it can be found in the URL when you visit your profile: `https://app.productive.io/ORG_ID-.../people/PERSON_ID/overview`
 
 Once this is done, open Alfred and use the `pp` keyword to list all tasks from your organization.
 
