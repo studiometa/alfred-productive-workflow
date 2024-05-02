@@ -423,6 +423,7 @@ function tasks_formatter(array $task): array
         ]),
         'variables' => [
             'task_url'      => sprintf('https://app.productive.io/%s/task/%s', get_org_id(), $task['id']),
+            'task_name'     => $task['attributes']['title'],
             'task_id'       => $task['id'],
             'task_key'      => $task_key,
             'project_id'    => $project['id'],
@@ -549,6 +550,8 @@ function services_formatter(array $service):array
         'arg'       => sprintf('https://app.productive.io/%s/d/deal/%s/services', get_org_id(), $deal['id']),
         'uid'       => $service['id'],
         'variables' => [
+            'service_name'  => $service['attributes']['name'],
+            'company_name'  => $company['attributes']['name'],
             'service_id'    => $service['id'],
             'deal_id'       => $deal['id'],
             'company_id'    => $company['id'],
@@ -730,7 +733,10 @@ function main(array $args):void
         ]],
         'people'    => [People::class, ['filter[status]' => 1]],
         'projects'  => [Projects::class, []],
-        'services'  => [Services::class, []],
+        'services'  => [Services::class, [
+            'filter[budget_status]' => '1',
+            'filter[time_tracking_enabled]' => 'true',
+        ]],
         'tasks'     => [Tasks::class, ['sort' => '-updated_at']],
     ];
 
