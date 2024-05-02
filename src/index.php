@@ -82,7 +82,8 @@ function env(string $key, ?string $default = null):string
     return (string)($server[$key] ?? $default);
 }
 
-function array_get(array $arr, string $path) {
+function array_get(array $arr, string $path)
+{
     $parts = explode('.', $path);
     $current = $arr;
 
@@ -685,7 +686,7 @@ function cmd(string $cmd, string $resource_class, array $parameters = []):void
         $items = collect(get_all_by_resource_from_cache($resource_class, $parameters));
 
         if ($company_id = cli_company_id()) {
-            $items = $items->filter(function($value) use ($company_id) {
+            $items = $items->filter(function ($value) use ($company_id) {
                 $relationships = $value['variables']['relationships'];
                 return
                     array_get($relationships, 'company.id') === $company_id ||
@@ -694,7 +695,7 @@ function cmd(string $cmd, string $resource_class, array $parameters = []):void
         }
 
         if (cli_no_ended_deal()) {
-            $items = $items->filter(function($value) {
+            $items = $items->filter(function ($value) {
                 $attributes = array_get($value, 'variables.relationships.deal.attributes');
                 return !is_null($attributes) && is_null(array_get($attributes, 'closed_at'));
             });
