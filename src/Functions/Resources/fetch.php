@@ -102,9 +102,11 @@ function get_all_by_resource_from_cache(string $resource_class, array $parameter
     $cache_item = $cache->getItem($cache_key);
 
     $logger('get_all_by_resource_from_cache', $cache_key, $cache_item->isHit() ? 'hit' : 'miss');
+    $loop = 0;
 
-    while (!$cache_item->isHit()) {
+    while (!$cache_item->isHit() && $loop < 1000) {
         sleep(1);
+        $loop++;
         $cache_item = $cache->getItem($cache_key);
         $logger('get_all_by_resource_from_cache', 'nothing to display');
     }
