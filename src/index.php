@@ -240,6 +240,7 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
     $cache_key = generate_cache_key($resource_class, $parameters);
     $cache_item = $cache->getItem($cache_key);
+    $cached_items = collect($cache_item->get());
 
     $logger('fetch_all_by_resource', $cache_key);
 
@@ -252,16 +253,16 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     $included = $response['included'];
 
     $items = array_values(
-        collect(
+        $cached_items->concat(
             array_map(
                 $resource_formatter,
                 merge_relationships($data, $included)
             )
-        )->unique('uid')->all()
+        )->reverse()->unique('uid')->all()
     );
 
     $cache_item->set($items);
-    //$cache->save($cache_item);
+    $cache->save($cache_item);
 
     while ($current_page < $response['meta']['total_pages']) {
         $current_page += 1;
@@ -273,18 +274,18 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
         $data = array_merge($data, $response['data']);
         $included = array_merge($included, $response['included']);
+        $cached_items = collect($cache_item->get());
         $items = array_values(
-            collect(
+            $cached_items->concat(
                 array_map(
                     $resource_formatter,
                     merge_relationships($data, $included)
                 )
-            )->unique('uid')->all()
+            )->reverse()->unique('uid')->all()
         );
         $cache_item->set($items);
+        $cache->save($cache_item);
     }
-
-    $cache->save($cache_item);
 }
 
 function get_all_by_resource_from_cache(string $resource_class, array $parameters = []):array
