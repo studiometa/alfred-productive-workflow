@@ -14,6 +14,8 @@ use Brandlabs\Productiveio\Resources\Tasks;
 use Brandlabs\Productiveio\Resources\Companies;
 use Alfred\Productive\Resources\Deals;
 use Alfred\Productive\Resources\Services;
+use Alfred\Productive\Resources\Timers;
+use Brandlabs\Productiveio\Exceptions\ProductiveioRequestException;
 use Brandlabs\Productiveio\Resources\People;
 use Brandlabs\Productiveio\Resources\TimeEntries;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -43,13 +45,28 @@ function should_update_cache(): bool
     return in_array('--update-cache', get_cli_args());
 }
 
-function cli_company_id():string
+function get_cli_arg(string $name): null|string
 {
-    $arg = collect(get_cli_args())->first(function($value) {
-        return str_starts_with($value, '--company=');
-    }) ?? '';
+    $arg_name = "--{$name}=";
+    $arg = collect(get_cli_args())
+        ->first(fn ($value) => str_starts_with($value, $arg_name));
 
-    return str_replace('--company=', '', $arg);
+    return is_string($arg) ? str_replace($arg_name, '', $arg) : $arg;
+}
+
+function cli_company_id():null|string
+{
+    return get_cli_arg('company');
+}
+
+function cli_service_id():null|string
+{
+    return get_cli_arg('service');
+}
+
+function cli_task_id():null|string
+{
+    return get_cli_arg('task');
 }
 
 function cli_no_ended_deal(): bool
@@ -189,21 +206,6 @@ function validate_resource_class(string $resource_class): void
     if (!(new ReflectionClass($resource_class))->isSubclassOf(BaseResource::class)) {
         throw new Exception("The '{$resource_class}' class is not a subclass of '".BaseResource::class."'.");
     }
-}
-
-function create_time_entry(
-    int $service_id,
-    int $task_id,
-    int $duration_in_minutes
-) {
-    $resource = new TimeEntries(get_client());
-    $resource->create([
-        'date' => date('Y-m-d'),
-        'service_id' => $service_id,
-        'task_id' => $task_id,
-        'person_id' => get_person_id(),
-        'time' => $duration_in_minutes,
-    ]);
 }
 
 function generate_cache_key(string $resource_class, array $parameters = [])
@@ -599,6 +601,77 @@ function validate_formatter(string $cmd):callable
     return $formatter;
 }
 
+function start_timer(
+    string $service_id,
+    ?string $task_id,
+) {
+    logger('start_timer', "service: {$service_id}", "task: {$task_id}");
+    $client = get_client();
+    $time_entries = new TimeEntries($client);
+    $params = [
+        'data' => [
+            'type' => 'time_entries',
+            'attributes' => [
+                'date' => date('Y-m-d'),
+            ],
+            'relationships' => [
+                'person' => [
+                    'data' => [
+                        'type' => 'people',
+                        'id' => get_person_id()
+                    ]
+                ],
+                'service' => [
+                    'data' => [
+                        'type' => 'services',
+                        'id' => $service_id,
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    if (!is_null($task_id)) {
+        $params['data']['relationships']['task'] = [
+            'data' => [
+                'type' => 'tasks',
+                'id' => $task_id,
+            ]
+        ];
+    }
+
+    logger('start_timer', 'create_time_entry', json_encode($params));
+    try {
+        $response = $time_entries->create($params);
+    } catch (ProductiveioRequestException $error) {
+        logger('start_timer', 'failed to create time entry', $error->getMessage());
+        error_log($error->getMessage());
+        die;
+    }
+
+    $timers = new Timers($client);
+    $params = [
+        'data' => [
+            'type' => 'timers',
+            'relationships' => [
+                'time_entry' => [
+                    'data' => [
+                        'type' => 'time_entries',
+                        'id' => array_get($response, 'data.id'),
+                    ],
+                ],
+            ],
+        ],
+    ];
+    logger('start_timer', 'create_timer', json_encode($params));
+    try {
+        $timers->create($params);
+    } catch (ProductiveioRequestException $error) {
+        logger('start_timer', 'failed to create timer', $error->getMessage());
+        error_log($error->getMessage());
+    }
+}
+
 function cmd(string $cmd, string $resource_class, array $parameters = []):void
 {
     validate_resource_class($resource_class);
@@ -635,6 +708,20 @@ function cmd(string $cmd, string $resource_class, array $parameters = []):void
 function main(array $args):void
 {
     $command = $args[1] ?? 'tasks';
+
+    if ($command === 'start-timer') {
+        $service_id = cli_service_id();
+        $task_id = cli_task_id();
+
+        if (!is_null($service_id)) {
+            start_timer(
+                service_id: $service_id,
+                task_id: is_string($task_id) ? $task_id : null,
+            );
+        }
+
+        return;
+    }
 
     $resources_map = [
         'companies' => [Companies::class, ['filter[status]' => 1]],
