@@ -28,7 +28,7 @@ function format_minutes(?int $minutes): string
     return "{$hours} h {$min} min";
 }
 
-function format_cents(?int $cents): string
+function format_cents(?float $cents): string
 {
     if (is_null($cents)) {
         return '...';
