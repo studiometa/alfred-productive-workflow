@@ -15,7 +15,20 @@
   "autoload": {
     "psr-4": {
       "Alfred\\Productive\\": "./src"
-    }
+    },
+    "files": [
+      "./src/Functions/Resources/fetch.php",
+      "./src/Functions/Resources/formatter.php",
+      "./src/Functions/Resources/utils.php",
+      "./src/Functions/actions.php",
+      "./src/Functions/cache.php",
+      "./src/Functions/cli.php",
+      "./src/Functions/client.php",
+      "./src/Functions/env.php",
+      "./src/Functions/format.php",
+      "./src/Functions/main.php",
+      "./src/Functions/utils.php"
+    ]
   },
   "require-dev": {
     "phpstan/phpstan": "^1.10",
