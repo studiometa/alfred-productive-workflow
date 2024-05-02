@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Add support for listing services tied to a task ([64c3fab](https://github.com/studiometa/alfred-productive-workflow/commit/64c3fab))
+- Add support for starting a timer ([1035805](https://github.com/studiometa/alfred-productive-workflow/commit/1035805), [7fb6ab6](https://github.com/studiometa/alfred-productive-workflow/commit/7fb6ab6), [6111877](https://github.com/studiometa/alfred-productive-workflow/commit/6111877))
+
+### Changed
+
+- Do not display services attached to a closed deal ([4e6ccf1](https://github.com/studiometa/alfred-productive-workflow/commit/4e6ccf1), [0e6cc29](https://github.com/studiometa/alfred-productive-workflow/commit/0e6cc29), [a265b0b](https://github.com/studiometa/alfred-productive-workflow/commit/a265b0b))
+- Refactor file structure ([d4e1aeb](https://github.com/studiometa/alfred-productive-workflow/commit/d4e1aeb))
+- Improve cache update ([3c1a8c5](https://github.com/studiometa/alfred-productive-workflow/commit/3c1a8c5))
+
 ## v0.0.3 - 2024.03.11
 
 ### Changed
