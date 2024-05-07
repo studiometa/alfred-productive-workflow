@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.0.5 - 2024.05.07
+
+### Fixed
+
+- Fix updating tasks in the background ([57151c7](https://github.com/studiometa/alfred-productive-workflow/commit/57151c7))
+
 ## v0.0.4 - 2024.05.02
 
 ### Added
