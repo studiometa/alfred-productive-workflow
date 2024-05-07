@@ -351,7 +351,7 @@
 				<key>runningsubtext</key>
 				<string>Fetching Productive tasks...</string>
 				<key>script</key>
-				<string>./src/main.sh tasks --query="{query}"</string>
+				<string>./src/main.sh tasks</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
