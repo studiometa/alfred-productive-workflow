@@ -49,7 +49,10 @@ function main(array $args):void
             'filter[budget_status]' => '1',
             'filter[time_tracking_enabled]' => 'true',
         ]],
-        'tasks'     => [Tasks::class, ['sort' => '-updated_at']],
+        'tasks'     => [Tasks::class, [
+            'sort' => '-updated_at',
+            'filter[status]' => '1',
+        ]],
     ];
 
     logger('main', $command, should_update_cache() ? '--update-cache' : '');
