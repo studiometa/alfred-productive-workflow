@@ -51,6 +51,13 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     $page_size = 200;
     $parameters = ['page[size]' => $page_size, 'page[number]' => $current_page] + $parameters;
 
+    $logger(
+        'fetch_all_by_resource',
+        $current_page,
+        $page_size,
+        count($cache_item->get())
+    );
+
     $response = $resource->getList($parameters);
     $data = $response['data'];
     $included = $response['included'];
@@ -69,7 +76,15 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
     while ($current_page < $response['meta']['total_pages']) {
         $current_page += 1;
-        $logger('fetch_all_by_resource', $current_page, $page_size, count($cache_item->get()), $response['meta']['total_count']);
+
+        $logger(
+            'fetch_all_by_resource',
+            $current_page,
+            $page_size,
+            count($cache_item->get()),
+            $response['meta']['total_count']
+        );
+
         $response = $resource->getList([
             'page[size]' => $page_size,
             'page[number]' => $current_page
@@ -94,13 +109,18 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     $new_ids = collect($data)->pluck('id');
     $cached_items = collect($cache_item->get());
 
-    $filtered_items = $cached_items->filter(function($item) use ($new_ids) {
+    $filtered_items = $cached_items->filter(function ($item) use ($new_ids) {
         return $new_ids->contains($item['uid']);
     });
     $cache_item->set(array_values($filtered_items->all()));
     $cache->save($cache_item);
 
-    $logger('previously cached items:', count($cached_items), 'cached items without obsolete items:', count($filtered_items));
+    $logger(
+        'previously cached items:',
+        count($cached_items),
+        'cached items without obsolete items:',
+        count($filtered_items)
+    );
 }
 
 function get_all_by_resource_from_cache(string $resource_class, array $parameters = []):array
