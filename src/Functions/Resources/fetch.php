@@ -89,6 +89,18 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
         $cache_item->set($items);
         $cache->save($cache_item);
     }
+
+    // Remove obsolete items from the cache
+    $new_ids = collect($data)->pluck('id');
+    $cached_items = collect($cache_item->get());
+
+    $filtered_items = $cached_items->filter(function($item) use ($new_ids) {
+        return $new_ids->contains($item['uid']);
+    });
+    $cache_item->set(array_values($filtered_items->all()));
+    $cache->save($cache_item);
+
+    $logger('previously cached items:', count($cached_items), 'cached items without obsolete items:', count($filtered_items));
 }
 
 function get_all_by_resource_from_cache(string $resource_class, array $parameters = []):array
