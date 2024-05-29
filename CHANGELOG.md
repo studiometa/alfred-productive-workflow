@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## v0.0.6 - 2024.05.29
+
+### Fixed
+
+- Filter out old items from the local cache (97bab78)
+- Fix pagination of fetched data (ba7462d)
+
+### Changed
+
+- Do not show closed tasks (b9d0ebe)
+
 ## v0.0.5 - 2024.05.07
 
 ### Fixed
