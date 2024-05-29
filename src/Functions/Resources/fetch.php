@@ -69,11 +69,11 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
     while ($current_page < $response['meta']['total_pages']) {
         $current_page += 1;
-        $logger('fetch_all_by_resource', $current_page, $page_size, count($cache_item->get()));
+        $logger('fetch_all_by_resource', $current_page, $page_size, count($cache_item->get()), $response['meta']['total_count']);
         $response = $resource->getList([
             'page[size]' => $page_size,
             'page[number]' => $current_page
-        ]);
+        ] + $parameters);
 
         $data = array_merge($data, $response['data']);
         $included = array_merge($included, $response['included']);
