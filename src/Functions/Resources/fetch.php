@@ -55,7 +55,7 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
         'fetch_all_by_resource',
         $current_page,
         $page_size,
-        count($cache_item->get())
+        count($cache_item->get() ?? [])
     );
 
     $response = $resource->getList($parameters);
