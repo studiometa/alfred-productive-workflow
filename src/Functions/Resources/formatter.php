@@ -149,14 +149,23 @@ function services_formatter(array $service):array
     $company = $deal['relationships']['company'];
 
     $deal_status = is_null(array_get($deal, 'attributes.closed_at')) ? 'Open' : 'Closed';
+    $deal_name = $deal['attributes']['name'];
+
+    if (!empty($deal['attributes']['suffix'])) {
+        $deal_name = sprintf(
+            '%s (%s)',
+            $deal_name,
+            $deal['attributes']['suffix'],
+        );
+    }
 
     $item = [
         'title'     => $service['attributes']['name'],
         'subtitle'  => format_subtitle([
             $company['attributes']['company_code'],
             $company['attributes']['name'],
+            $deal_name,
             $deal_status,
-            $deal['attributes']['name'],
             sprintf(
                 '%s / %s',
                 format_minutes($service['attributes']['worked_time']),
