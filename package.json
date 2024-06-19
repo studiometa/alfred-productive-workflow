@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "20.14.5"
+  },
+  "scripts": {
+    "test": "node --env-file .env scripts/test.js"
+  }
+}
