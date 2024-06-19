@@ -14,6 +14,10 @@ function merge_relationships(array $data, array $included): array
         $new_row = $row;
         $new_row['included'] = $included;
 
+        if (!isset($row['relationships'])) {
+            continue;
+        }
+
         foreach ($row['relationships'] as $key => $data) {
             $type = $data['data']['type'] ?? null;
             $id = $data['data']['id'] ?? null;

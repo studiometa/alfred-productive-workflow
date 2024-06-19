@@ -133,7 +133,6 @@ function companies_formatter(array $company):array
         'arg'       => sprintf('https://app.productive.io/%s/companies/%s', get_org_id(), $company['id']),
         'uid'       => $company['id'],
         'variables' => [
-            'relationships' => $company['relationships'],
             'attributes' => $company['attributes'],
         ],
     ];

@@ -42,12 +42,44 @@ function main(array $args):void
     }
 
     $resources_map = [
-        'companies' => [Companies::class, ['filter[status]' => 1]],
+        'companies' => [Companies::class, [
+            'filter[status]'    => '1',
+            'fields[companies]' => to_array_parameter('name', 'company_code'),
+        ]],
         'deals'     => [Deals::class, [
             'filter[sales_status_id]' => '1,2,3',
+            'include'                 => to_array_parameter('company', 'responsible', 'deal_status'),
+            'fields[deals]'           => to_array_parameter(
+                'name',
+                'sales_status_id',
+                'company',
+                'responsible',
+                'deal_status',
+            ),
+            'fields[companies]'       => to_array_parameter('company_code', 'name'),
+            'fields[people]'          => to_array_parameter('first_name', 'last_name'),
+            'fields[deal_statuses]'   => to_array_parameter('name'),
         ]],
-        'people'    => [People::class, ['filter[status]' => 1]],
-        'projects'  => [Projects::class, []],
+        'people'    => [People::class, [
+            'filter[status]'    => '1',
+            'include'           => to_array_parameter('company'),
+            'fields[people]'    => to_array_parameter(
+                'first_name',
+                'last_name',
+                'title',
+                'email',
+                'company',
+            ),
+            'fields[companies]' => to_array_parameter('company_code', 'name'),
+        ]],
+        'projects'  => [Projects::class, [
+            'include'           => to_array_parameter('company'),
+            'fields[projects]'  => to_array_parameter(
+                'name',
+                'company',
+            ),
+            'fields[companies]' => to_array_parameter('company_code', 'name'),
+        ]],
         'services'  => [Services::class, [
             'filter[time_tracking_enabled]'  => 'true',
             'filter[trackable_by_person_id]' => 'true',
@@ -66,8 +98,40 @@ function main(array $args):void
             'fields[companies]'              => to_array_parameter('company_code', 'name'),
         ]],
         'tasks'     => [Tasks::class, [
-            'sort' => '-updated_at',
+            'sort'           => '-updated_at',
             'filter[status]' => '1',
+            'include'        => to_array_parameter(
+                'project',
+                'project.company',
+                'assignee',
+                'workflow_status'
+            ),
+            'fields[tasks]'  => to_array_parameter(
+                'task_number',
+                'title',
+                'worked_time',
+                'initial_estimate',
+                'project',
+                'assignee',
+                'workflow_status',
+            ),
+            'fields[projects]'  => to_array_parameter(
+                'project_number',
+                'name',
+                'company',
+            ),
+            'fields[companies]'  => to_array_parameter(
+                'company_code',
+                'name',
+            ),
+            'fields[people]'  => to_array_parameter(
+                'first_name',
+                'last_name',
+            ),
+            'fields[statuses]'  => to_array_parameter(
+                'name',
+                'last_name',
+            ),
         ]],
     ];
 
