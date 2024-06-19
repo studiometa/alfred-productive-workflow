@@ -44,3 +44,23 @@ function get_root_dir(): string
 {
     return dirname(__DIR__, 2);
 }
+
+/**
+ * Join a list of arguments into a single string with a `,` as separator.
+ * @param  string $args
+ * @return string
+ */
+function to_array_parameter(...$args): string
+{
+    return implode(',', $args);
+}
+
+/**
+ * Get a date in the format YYYY-MM-DD from some time ago.
+ * @param  string $time
+ * @return string
+ */
+function time_ago(string $time = '-6 months'): string
+{
+    return date('Y-m-d', strtotime($time));
+}

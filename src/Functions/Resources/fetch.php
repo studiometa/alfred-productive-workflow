@@ -26,14 +26,7 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     $logger('fetch_all_by_resource', $resource_formatter, json_encode($parameters));
 
     $cache = get_cache();
-    $last_update_item = $cache->getItem(md5('last_update_' . $resource_class));
-    if ($last_update_item->isHit()) {
-        $logger('last fetch happened less than 1 minute ago, not fetching.');
-        return;
-    } else {
-        $last_update_item->expiresAfter(get_update_interval());
-        $cache->save($last_update_item);
-    }
+
 
     validate_resource_class($resource_class);
 
@@ -45,6 +38,16 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
     $cache_item = $cache->getItem($cache_key);
     $cached_items = collect($cache_item->get());
 
+    $last_update_item = $cache->getItem(md5('last_update_' . $resource_class));
+    $update_interval = get_update_interval();
+    if ($cached_items->isNotEmpty() && $last_update_item->isHit()) {
+        $logger("last fetch happened less than {$update_interval} seconds ago, not fetching.");
+        return;
+    } else {
+        $last_update_item->expiresAfter($update_interval);
+        $cache->save($last_update_item);
+    }
+
     $logger('fetch_all_by_resource', $cache_key);
 
     $current_page = 1;
@@ -53,9 +56,11 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
     $logger(
         'fetch_all_by_resource',
-        $current_page,
-        $page_size,
-        count($cache_item->get() ?? [])
+        [
+                'current_page' => $current_page,
+                'page_size' => $page_size,
+                'cache_count' => count($cache_item->get() ?? []),
+            ],
     );
 
     $response = $resource->getList($parameters);
@@ -79,10 +84,13 @@ function fetch_all_by_resource(string $resource_class, callable $resource_format
 
         $logger(
             'fetch_all_by_resource',
-            $current_page,
-            $page_size,
-            count($cache_item->get()),
-            $response['meta']['total_count']
+            [
+                'current_page' => $current_page,
+                'page_size' => $page_size,
+                'cache_count' => count($cache_item->get() ?? []),
+                'response_pages' => $response['meta']['total_pages'],
+                'response_count' => $response['meta']['total_count'],
+            ],
         );
 
         $response = $resource->getList([

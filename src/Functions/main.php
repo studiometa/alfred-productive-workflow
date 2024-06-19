@@ -15,6 +15,9 @@ use function Alfred\Productive\Functions\actions\start_timer;
 use function Alfred\Productive\Functions\utils\logger;
 use function Alfred\Productive\Functions\cache\should_update_cache;
 use function Alfred\Productive\Functions\actions\cmd;
+use function Alfred\Productive\Functions\env\get_person_id;
+use function Alfred\Productive\Functions\utils\time_ago;
+use function Alfred\Productive\Functions\utils\to_array_parameter;
 
 /**
  * Main entrypoint.
@@ -46,8 +49,21 @@ function main(array $args):void
         'people'    => [People::class, ['filter[status]' => 1]],
         'projects'  => [Projects::class, []],
         'services'  => [Services::class, [
-            'filter[budget_status]' => '1',
-            'filter[time_tracking_enabled]' => 'true',
+            'filter[time_tracking_enabled]'  => 'true',
+            'filter[trackable_by_person_id]' => 'true',
+            'filter[person_id]'              => get_person_id(),
+            'filter[after]'                  => time_ago('-4 months'),
+            'include'                        => to_array_parameter('deal', 'deal.company'),
+            'fields[services]'               => to_array_parameter(
+                'name',
+                'worked_time',
+                'budgeted_time',
+                'budget_used',
+                'budget_total',
+                'deal',
+            ),
+            'fields[deals]'                  => to_array_parameter('name', 'suffix', 'closed_at', 'company'),
+            'fields[companies]'              => to_array_parameter('company_code', 'name'),
         ]],
         'tasks'     => [Tasks::class, [
             'sort' => '-updated_at',
