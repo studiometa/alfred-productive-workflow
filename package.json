@@ -1,7 +1,7 @@
 {
   "type": "module",
   "devDependencies": {
-    "@types/node": "20.14.7"
+    "@types/node": "20.14.9"
   },
   "scripts": {
     "test": "node --env-file .env scripts/test.js"
