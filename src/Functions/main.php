@@ -81,7 +81,7 @@ function main(array $args):void
         ]],
         'services'  => [Services::class, [
             'filter[time_tracking_enabled]'  => 'true',
-            'filter[trackable_by_person_id]' => 'true',
+            'filter[trackable_by_person_id]' => get_person_id(),
             'filter[person_id]'              => get_person_id(),
             'filter[after]'                  => time_ago('-4 months'),
             'include'                        => to_array_parameter('deal', 'deal.company'),
