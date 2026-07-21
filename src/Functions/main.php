@@ -47,11 +47,10 @@ function main(array $args):void
             'fields[companies]' => to_array_parameter('name', 'company_code'),
         ]],
         'deals'     => [Deals::class, [
-            'filter[sales_status_id]' => '1,2,3',
             'include'                 => to_array_parameter('company', 'responsible', 'deal_status'),
             'fields[deals]'           => to_array_parameter(
                 'name',
-                'sales_status_id',
+                'stage_status_id',
                 'company',
                 'responsible',
                 'deal_status',

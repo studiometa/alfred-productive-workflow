@@ -96,7 +96,9 @@ function deals_formatter(array $deal):array
         1 => 'Ouvert',
         2 => 'Gagné',
         3 => 'Perdu',
+        4 => 'Livré',
     ];
+    $status_id = $deal['attributes']['stage_status_id'] ?? null;
 
     $item = [
         'title'     => $deal['attributes']['name'],
@@ -104,7 +106,7 @@ function deals_formatter(array $deal):array
             $company['attributes']['company_code'],
             $company['attributes']['name'],
             isset($responsible['attributes']) ? format_name($responsible) : null,
-            $status[$deal['attributes']['sales_status_id'] ?? 3],
+            $status[$status_id] ?? null,
             isset($deal_status['attributes']) ? $deal_status['attributes']['name'] : null,
         ]),
         'arg'       => sprintf('https://app.productive.io/%s/d/deal/%s', get_org_id(), $deal['id']),
@@ -189,7 +191,7 @@ function services_formatter(array $service):array
         ],
     ];
 
-    $item['match'] = format_match($item);
+    $item['match'] = implode(' ', [format_match($item), $deal['id']]);
 
     return $item;
 }
