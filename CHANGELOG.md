@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Replace the filesystem cache with an indexed SQLite cache.
+- Publish cache refreshes atomically and preserve the last successful data when a refresh fails.
+- Coordinate concurrent background refreshes with per-resource locks.
+
 ## v0.0.6 - 2024.05.29
 
 ### Fixed

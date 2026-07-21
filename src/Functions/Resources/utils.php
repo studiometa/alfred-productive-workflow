@@ -8,13 +8,20 @@ use Brandlabs\Productiveio\BaseResource;
 
 function merge_relationships(array $data, array $included): array
 {
-    $included_collection = collect($included);
+    $included_index = [];
+    foreach ($included as $item) {
+        if (isset($item['type'], $item['id'])) {
+            $included_index[$item['type']][$item['id']] = $item;
+        }
+    }
+
     $merged = [];
     foreach ($data as $row) {
         $new_row = $row;
         $new_row['included'] = $included;
 
         if (!isset($row['relationships'])) {
+            $merged[] = $new_row;
             continue;
         }
 
@@ -26,14 +33,12 @@ function merge_relationships(array $data, array $included): array
                 continue;
             }
 
-            $resolved_relationship = $included_collection->where('type', $type)->where('id', $id)->first();
+            $resolved_relationship = $included_index[$type][$id] ?? null;
 
             // Resolve companies relationships for projects and deals
             if (in_array($type, ['projects','deals']) && isset($resolved_relationship['relationships']['company'])) {
-                $company = $included_collection
-                    ->where('type', 'companies')
-                    ->where('id', $resolved_relationship['relationships']['company']['data']['id'])
-                    ->first();
+                $company_id = $resolved_relationship['relationships']['company']['data']['id'] ?? null;
+                $company = $included_index['companies'][$company_id] ?? null;
 
                 if ($company) {
                     $resolved_relationship['relationships']['company'] = $company;

@@ -94,33 +94,21 @@ function cmd(string $cmd, string $resource_class, array $parameters = []):void
     logger('cmd', $cmd, $resource_class, $parameters);
     validate_resource_class($resource_class);
 
+    $formatter = validate_formatter($cmd);
+
     if (should_update_cache()) {
-        fetch_all_by_resource($resource_class, validate_formatter($cmd), $parameters);
-    } else {
-        $items = collect(get_all_by_resource_from_cache($resource_class, $parameters));
-
-        if ($company_id = cli_company_id()) {
-            $items = $items->filter(function ($item) use ($company_id) {
-                $relationships = array_get($item, 'variables.relationships');
-                return
-                    array_get($relationships, 'company.id') === $company_id ||
-                    array_get($relationships, 'deal.relationships.company.id') === $company_id;
-            });
-        }
-
-        if (cli_no_ended_deal()) {
-            $items = $items->filter(function ($item) {
-                $attributes = array_get($item, 'variables.relationships.deal.attributes');
-                return !is_null($attributes) && is_null(array_get($attributes, 'closed_at'));
-            });
-        }
-
-        if ($cmd === 'services') {
-            $items = $items->filter(function ($item) {
-                return is_null(array_get($item, 'variables.relationships.deal.attributes.closed_at'));
-            });
-        }
-
-        die(json_encode(['items' => array_values($items->all())]));
+        fetch_all_by_resource($resource_class, $formatter, $parameters);
+        return;
     }
+
+    $open_deals_only = cli_no_ended_deal() || $cmd === 'services';
+    $items = get_all_by_resource_from_cache(
+        $resource_class,
+        $formatter,
+        $parameters,
+        cli_company_id(),
+        $open_deals_only
+    );
+
+    die(json_encode(['items' => array_values($items)]));
 }
