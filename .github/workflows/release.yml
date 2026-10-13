@@ -1,90 +1,63 @@
 name: Release
 
+# Each merge into main releases what its fragments describe. A manual run
+# (`gh workflow run release.yml -f version=major`) forces a bump.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release, without the v prefix (e.g. 0.0.7, or 0.1.0-beta.1 for a prerelease)'
-        type: string
-        required: true
+        description: 'Version: `auto` follows the fragments; `patch`, `minor` or `major` forces that bump'
+        type: choice
+        options: [auto, patch, minor, major]
+        default: auto
 
-concurrency: release
+# One release at a time. GitHub keeps only the newest pending run: it
+# releases everything that main has at that point.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
+  # Folds the fragments, commits `Release <version>`, tags, pushes and creates
+  # the GitHub release.
   release:
-    name: Changelog and tag
+    name: Release
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: write
       pull-requests: read
     outputs:
-      body: ${{ steps.changelog.outputs.body }}
-      prerelease: ${{ steps.version.outputs.prerelease }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          # The changelog action reads the commit that added each fragment.
-          fetch-depth: 0
 
-      - name: Check version
-        id: version
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::Invalid version \"$VERSION\". Use X.Y.Z or X.Y.Z-beta.N, without the v prefix."
-            exit 1
-          fi
-
-          if git rev-parse --quiet --verify "refs/tags/$VERSION" > /dev/null; then
-            echo "::error::The tag $VERSION already exists."
-            exit 1
-          fi
-
-          PRERELEASE=false
-          if [[ $VERSION == *-* ]]; then
-            PRERELEASE=true
-          fi
-
-          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
-
-      - name: Fold changelog fragments
-        id: changelog
-        uses: weareikko/changelog@c25888e03ad7c8bbaee897b84e778ebce9e9301c # 1.0.3
+      - name: Release
+        id: release
+        uses: weareikko/changelog@9d93346df9858eaa29007bd8530aad8f4c5b539a # 0.1.0
         with:
           command: release
-          version: v${{ inputs.version }}
+          version: ${{ inputs.version || 'auto' }}
 
-      - name: Fail when there is nothing to release
-        if: steps.changelog.outputs.changed != 'true'
-        run: |
-          echo "::error::No fragment in .changelog/: nothing to release."
-          exit 1
-
-      - name: Commit, tag and push
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md .changelog
-          git commit -m "Release v$VERSION"
-          git tag -a "$VERSION" -m "v$VERSION"
-          git push origin HEAD:main "$VERSION"
-
-  # A tag pushed with GITHUB_TOKEN does not start other workflows, so the
-  # build and the GitHub release run in the same workflow.
-  publish:
-    name: Build and publish
+  # A tag pushed with GITHUB_TOKEN starts no workflow, so the Alfred workflow
+  # is built here and attached to the GitHub release. "Re-run failed jobs" on
+  # this job uploads it again.
+  asset:
+    name: Build and upload the Alfred workflow
     needs: release
+    if: needs.release.outputs.version != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: refs/tags/${{ inputs.version }}
+          ref: refs/tags/${{ needs.release.outputs.version }}
 
       - name: Get composer cache directory
         id: composer-cache
@@ -106,10 +79,8 @@ jobs:
       - name: Build workflow
         run: ./scripts/build.sh
 
-      - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
-        with:
-          tag: ${{ inputs.version }}
-          name: v${{ inputs.version }}
-          body: ${{ needs.release.outputs.body }}
-          prerelease: ${{ needs.release.outputs.prerelease }}
-          artifacts: alfred-productive-workflow.alfredworkflow
+      - name: Upload to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: gh release upload "$VERSION" alfred-productive-workflow.alfredworkflow --clobber
