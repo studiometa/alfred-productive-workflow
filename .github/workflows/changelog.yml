@@ -19,7 +19,7 @@ jobs:
       # Every change to the files shipped in the workflow archive needs a
       # fragment in .changelog/, unless the pull request has the
       # `no-changelog` label (tests, refactors, tooling, lock file updates).
-      - uses: weareikko/changelog@600f4225cfd2778967eaffa693e86666c5a2d4bd # 1.0.2
+      - uses: weareikko/changelog@0b4e3b5d6e33dc7f1379f2e822afbc7d5669c9b5 # 0.1.1
         with:
           command: check
           require-paths: |
