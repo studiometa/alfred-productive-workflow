@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file. Each pull r
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.0.9 - 2026-11-16
+
+### Dependencies
+
+- Update dependency squizlabs/php_codesniffer to v3.13.6 [SECURITY] ([#39])
+- Update dependency @types/node to v20.19.43 ([#41])
+
+[#39]: https://github.com/studiometa/alfred-productive-workflow/pull/39
+[#41]: https://github.com/studiometa/alfred-productive-workflow/pull/41
+
 ## 0.0.8 - 2026-11-02
 
 ### Dependencies
